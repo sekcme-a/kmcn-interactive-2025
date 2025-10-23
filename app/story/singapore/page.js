@@ -185,9 +185,9 @@ export default function App() {
                 그러나 정부는 동시에 내국인 일자리를 보호하기 위한 제도적
                 안전장치를 강조합니다.
                 <br />
-                총리와 노동부 장관은 '외국인은 필수지만, 균형이 필요하다'고
+                {`총리와 노동부 장관은 '외국인은 필수지만, 균형이 필요하다'고
                 밝혔습니다. 반면 야당은 저숙련 일자리가 외국인에게 고착화될 수
-                있다는 우려를 제기했습니다.
+                있다는 우려를 제기했습니다.`}
               </motion.p>
             </div>
             <div className="flex-1 mt-8 lg:mt-0">
@@ -244,14 +244,14 @@ export default function App() {
               className="text-sm text-right mt-3 text-gray-500"
               variants={itemVariants}
             >
-              싱가포르 도심 해안 지역에서 진행중인 'NS Square' 개발 현장
+              {`싱가포르 도심 해안 지역에서 진행중인 'NS Square' 개발 현장`}
             </motion.p>
             <motion.p
               className="text-xs leading-[1.1] text-right text-gray-400"
               variants={itemVariants}
             >
-              Ongoing construction of the "NS Square" development in Singapore's
-              downtown watefront
+              {`Ongoing construction of the "NS Square" development in Singapore's
+              downtown watefront`}
             </motion.p>
           </motion.div>
         </motion.div>

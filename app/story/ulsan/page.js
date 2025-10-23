@@ -189,13 +189,13 @@ export default function App() {
             className="mt-5 leading-relaxed text-gray-500 italic"
             variants={itemVariants}
           >
-            In Ulsan's shipbuildling sector, foreign skilled workers play a part
+            {`In Ulsan's shipbuildling sector, foreign skilled workers play a part
             in meeting labor demand, while in Uljin's nuclear industry,
             employment for foreigners remains limited due to its specific nature
             and regulatory factors. These differences highlight how industry
             characteristics and institutional conditions shape workforce
             composition, offering important implications for future labor
-            policies.
+            policies.`}
           </motion.p>
 
           <motion.div className="mt-10" variants={itemVariants}>
