@@ -1,103 +1,226 @@
+"use client";
+
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState, useLayoutEffect } from "react";
+import Section3 from "./zz_components/Section3";
+import Header from "./zz_components/Header";
+import Section1 from "./zz_components/Section1";
+import Section4 from "./zz_components/Section4";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const containerRef = useRef(null); // <-- 스크롤 가능한 최상위 컨테이너
+  const sectionRefs = useRef([]);
+  const videoRef = useRef(null);
+  const [activeSection, setActiveSection] = useState("header"); // header, video, text
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // 저장 키 (원하면 경로 기반으로 바꿀 수 있음)
+  const STORAGE_KEY = "home-scroll";
+
+  // 스크롤 위치 복원 (렌더 직후 컨테이너가 있으면 복원)
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      // 숫자가 아닌 경우 대비
+      const y = parseFloat(saved);
+      if (!Number.isNaN(y)) {
+        // 즉시 복원
+        el.scrollTop = y;
+      }
+    }
+  }, []); // 처음 마운트 시 한 번
+
+  // 스크롤 위치 저장 (디바운스)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let timer = null;
+    const onScroll = () => {
+      // 디바운스: 150ms
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, el.scrollTop.toString());
+      }, 150);
+    };
+
+    el.addEventListener("scroll", onScroll);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  // IntersectionObserver: root를 container로 지정
+  useEffect(() => {
+    sectionRefs.current = sectionRefs.current.slice(0, 4); // header, video, text, textd
+
+    const rootEl = containerRef.current;
+    if (!rootEl) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let maxRatio = 0;
+        let visibleId = activeSection;
+        entries.forEach((entry) => {
+          if (entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio;
+            visibleId = entry.target.id;
+          }
+        });
+        setActiveSection(visibleId);
+      },
+      {
+        root: rootEl,
+        threshold: Array.from({ length: 101 }, (_, i) => i / 100),
+      }
+    );
+
+    sectionRefs.current.forEach((ref) => ref && observer.observe(ref));
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 한 번 설정
+
+  // 비디오 재생/정지 (activeSection 변경에 반응)
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (activeSection === "video") {
+      videoRef.current.play().catch(() => {});
+    } else {
+      videoRef.current.pause();
+    }
+  }, [activeSection]);
+
+  const isVideoVisible = activeSection === "video";
+  const bgColor = isVideoVisible ? "#000" : "#fff";
+  const textColor = isVideoVisible ? "#fff" : "#000";
+
+  return (
+    <div
+      ref={containerRef} // <-- 반드시 여기
+      className="h-screen w-screen overflow-y-scroll snap-y snap-mandatory scrollbar-hide scroll-smooth relative transition-colors duration-1000"
+      style={{ backgroundColor: bgColor, color: textColor }}
+    >
+      <AnimatePresence>
+        {isVideoVisible && (
+          <motion.div
+            key="overlay"
+            className="fixed inset-0 bg-black z-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 섹션 1: 헤더 */}
+      <motion.div
+        id="header"
+        ref={(el) => (sectionRefs.current[0] = el)}
+        className="flex justify-between w-full items-center h-screen snap-start relative z-10 transition-colors duration-1000"
+      >
+        <div className="flex flex-col h-full w-full">
+          <Header />
+          <Section1 />
+
+          {/* 스크롤 유도 애니메이션 */}
+          <motion.div
+            className="hidden mt-auto lg:flex justify-center pb-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <a
+              href="#video"
+              className="group flex flex-col items-center cursor-pointer transition-all duration-300 hover:text-red-600"
+              onClick={(e) => {
+                // 기본 앵커 동작 막고, 컨테이너 내에서 스크롤 이동
+                e.preventDefault();
+                const target = sectionRefs.current[1];
+                if (target && containerRef.current) {
+                  containerRef.current.scrollTo({
+                    top: target.offsetTop,
+                    behavior: "smooth",
+                  });
+                }
+              }}
+            >
+              <span className="text-xl font-semibold mb-2">Video 보기</span>
+              <div className="w-8 h-12 border-2 border-black rounded-full flex justify-center pt-2 group-hover:border-red-600 transition-colors duration-300">
+                <div className="w-1.5 h-1.5 bg-black rounded-full animate-bounce group-hover:bg-red-600"></div>
+              </div>
+            </a>
+          </motion.div>
+
+          <motion.div
+            className="lg:hidden mt-auto flex justify-center flex-1 items-center mb-[10vh]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
           >
-            Read our docs
-          </a>
+            <a
+              href="#video"
+              className="group flex flex-col items-center cursor-pointer transition-all duration-300 hover:text-red-600"
+              onClick={(e) => {
+                e.preventDefault();
+                const target = sectionRefs.current[1];
+                if (target && containerRef.current) {
+                  containerRef.current.scrollTo({
+                    top: target.offsetTop,
+                    behavior: "smooth",
+                  });
+                }
+              }}
+            >
+              <span className="text-sm font-semibold mb-1">Video 보기</span>
+              <div className="w-6 h-10 border-2 border-black rounded-full flex justify-center pt-1.5 group-hover:border-red-600 transition-colors duration-300">
+                <div className="w-1 h-1 bg-black rounded-full animate-bounce group-hover:bg-red-600"></div>
+              </div>
+            </a>
+          </motion.div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </motion.div>
+
+      {/* 섹션 2: 비디오 */}
+      <motion.div
+        id="video"
+        ref={(el) => (sectionRefs.current[1] = el)}
+        className="flex justify-center items-center h-screen snap-start relative z-10"
+      >
+        <motion.div className="rounded-2xl overflow-hidden w-[80%] shadow-2xl transition-all duration-700 hover:scale-[1.01]">
+          <video
+            ref={videoRef}
+            src="/intro.mp4"
+            className="w-full h-auto"
+            controls
+            loop
+            muted
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </motion.div>
+      </motion.div>
+
+      {/* 섹션 3: 텍스트 */}
+      <motion.div
+        id="text"
+        ref={(el) => (sectionRefs.current[2] = el)}
+        className=" h-screen snap-start relative z-10"
+      >
+        <Header />
+        <Section3 />
+      </motion.div>
+
+      {/* 섹션 4 */}
+      <motion.div
+        id="textd"
+        ref={(el) => (sectionRefs.current[3] = el)}
+        className=" h-fit lg:h-screen snap-start relative z-10 "
+      >
+        <Header />
+        <Section4 />
+      </motion.div>
     </div>
   );
 }
