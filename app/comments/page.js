@@ -1,16 +1,21 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import ArticleButton from "../story/ArticleButton";
 import Header from "../zz_components/Header";
+import Comment from "./Comment";
 
 export default function Comments() {
+  const router = useRouter();
   return (
     <div className="flex flex-col h-screen">
       <Header />
-      <div className="flex-1 lg:flex items-center mx-[5%]">
-        <div className="flex-1">{/* comments */}</div>
-
+      <div className="flex-1 lg:flex items-center mx-[5%] gap-x-10 pb-10">
         <div className="flex-1">
+          <Comment />
+        </div>
+
+        <div className="flex-1 mt-16 lg:mt-0">
           <h1 className="text-5xl font-bold">
             SHARE YOUR
             <br /> THOUGHTS
@@ -18,7 +23,15 @@ export default function Comments() {
           <h2 className="text-4xl mt-5 font-bold">의견 남기기</h2>
 
           <div className="flex justify-end mt-10">
-            <ArticleButton url="/" nod text="처음으로 돌아가기" />
+            <ArticleButton
+              url="/"
+              nod
+              text="처음으로 돌아가기"
+              onClick={() => {
+                localStorage.removeItem("home-scroll"); // 이전 예시에서 쓰던 키와 동일하게
+                router.push("/");
+              }}
+            />
           </div>
 
           <div className="mt-10">
