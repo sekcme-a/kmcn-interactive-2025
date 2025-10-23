@@ -196,8 +196,8 @@ export default function App() {
               className="text-right text-xs leading-[1.1] text-gray-500"
               variants={itemVariants}
             >
-              A construction site in downtwon Toronto, reflecting Canada's
-              reliance on migrant workers in the building sector
+              {`A construction site in downtwon Toronto, reflecting Canada's
+              reliance on migrant workers in the building sector`}
             </motion.p>
           </div>
 
